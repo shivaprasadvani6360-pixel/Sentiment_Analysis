@@ -117,12 +117,12 @@ h3 { font-size:1.35rem !important; }
 }
 .result-card .result-sub {
     font-family: 'Playfair Display', serif;
-    font-size: 2.65rem;
+    font-size: 2.0rem;
     line-height: 1;
     font-weight: 600;
     color: var(--plum);
 }
-.result-card.neutral .result-sub { font-size: 2.0rem; white-space: nowrap; letter-spacing: -.025em; }
+.result-card .result-sub { white-space: nowrap; letter-spacing: -.025em; }
 
 .stButton > button { border-radius:999px; border:1px solid var(--plum); background:var(--plum); color:white; padding:.65rem 1.2rem; font-weight:600; }
 .stButton > button:hover { background:var(--violet-dark); border-color:var(--violet-dark); }
