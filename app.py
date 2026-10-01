@@ -14,8 +14,8 @@ from nltk.tokenize import word_tokenize
 # Page configuration
 # ============================================================
 st.set_page_config(
-    page_title="ReviewSense | Customer Sentiment AI",
-    page_icon="💬",
+    page_title="Sentiment Analysis",
+    page_icon="📊",
     layout="wide",
     initial_sidebar_state="expanded",
 )
@@ -45,53 +45,102 @@ ensure_nltk_resources()
 # ============================================================
 # Custom UI
 # ============================================================
-st.markdown(
-    """
-    <style>
-    .block-container {padding-top: 1.5rem; padding-bottom: 2rem;}
+st.markdown("""
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@500;600&display=swap');
 
-    .hero {
-        padding: 2rem 2.2rem;
-        border-radius: 22px;
-        border: 1px solid rgba(128,128,128,.20);
-        background: linear-gradient(135deg, rgba(99,102,241,.13), rgba(14,165,233,.08));
-        margin-bottom: 1.2rem;
-    }
-    .hero h1 {font-size: 2.6rem; margin: 0; font-weight: 800;}
-    .hero p {font-size: 1.05rem; margin: .5rem 0 0; opacity: .82;}
+:root {
+    --plum:#4C1F39; --violet:#757089; --violet-dark:#5F566F;
+    --rose:#934A3F; --paper:#F9F6FA; --white:#FFFFFF;
+    --ink:#29232B; --muted:#77707B; --line:#E8E1EA;
+}
+.stApp { background:var(--paper); color:var(--ink); font-family:'DM Sans',sans-serif; }
+.block-container { max-width:1380px; padding:2.2rem 4rem 4rem; }
+[data-testid="stSidebar"] { background:#F3EEF5; border-right:1px solid var(--line); }
+h1,h2,h3 { font-family:'Playfair Display',serif !important; color:var(--plum) !important; }
+h1 { font-size:3.7rem !important; line-height:1.02 !important; }
+h2 { font-size:2.25rem !important; }
+h3 { font-size:1.35rem !important; }
+.hero {
+    padding:3.4rem 3.6rem; border-radius:30px;
+    background:linear-gradient(135deg,#EEE8F2 0%,#F9F6FA 58%,#E8DFEA 100%);
+    border:1px solid #E5DDE8; margin-bottom:1.8rem; position:relative; overflow:hidden;
+}
+.hero:after {
+    content:""; position:absolute; width:330px; height:330px; right:-90px; top:-120px;
+    border-radius:50%; background:rgba(117,112,137,.13);
+}
+.eyebrow { color:var(--rose); font-size:.78rem; font-weight:700; letter-spacing:.18em; text-transform:uppercase; margin-bottom:.8rem; }
+.hero-title { max-width:800px; font-family:'Playfair Display',serif; font-size:clamp(2.8rem,6vw,5.4rem); line-height:.98; color:var(--plum); position:relative; z-index:2; }
+.hero-sub { max-width:720px; color:#6D6570; font-size:1.08rem; line-height:1.7; margin-top:1.2rem; position:relative; z-index:2; }
+.pill { display:inline-block; padding:.45rem .75rem; border:1px solid #DCD3E2; background:rgba(255,255,255,.62); border-radius:999px; margin:.25rem .25rem .1rem 0; font-size:.78rem; color:var(--violet-dark); }
+.section-kicker { color:var(--rose); font-weight:700; letter-spacing:.14em; text-transform:uppercase; font-size:.72rem; margin-top:2.2rem; }
+.section-title { font-family:'Playfair Display',serif; font-size:2.1rem; color:var(--plum); margin:.2rem 0 1rem; }
+.card,.kpi {
+    background:var(--white); border:1px solid var(--line);
+    border-radius:22px; box-shadow:0 10px 35px rgba(76,31,57,.045);
+}
+.card { padding:1.35rem 1.45rem; }
+.kpi { padding:1.25rem 1.35rem; min-height:116px; }
+.kpi-label { color:var(--muted); font-size:.78rem; text-transform:uppercase; letter-spacing:.08em; }
+.kpi-value { color:var(--plum); font-family:'Playfair Display',serif; font-size:2rem; margin-top:.25rem; }
+.kpi-note { color:var(--violet); font-size:.76rem; margin-top:.2rem; }
+.result-positive,.result-negative,.result-neutral { border-radius:24px; padding:2rem; margin:1rem 0; border:1px solid var(--line); }
+.result-positive { background:#F0F4F0; } .result-negative { background:#F8EEEE; } .result-neutral { background:#F1EFF5; }
+.result-label { font-size:.75rem; text-transform:uppercase; letter-spacing:.15em; font-weight:700; }
+.result-sentiment { font-family:'Playfair Display',serif; font-size:2.8rem; color:var(--plum); }
 
-    .result-card {
-        padding: 1.4rem;
-        border-radius: 18px;
-        text-align: center;
-        border: 1px solid rgba(128,128,128,.22);
-        margin: .8rem 0 1rem;
-    }
-    .positive {border-left: 7px solid #16a34a;}
-    .negative {border-left: 7px solid #dc2626;}
-    .neutral {border-left: 7px solid #2563eb;}
-    .result-label {font-size: 2rem; font-weight: 800;}
-    .result-sub {opacity: .78; margin-top: .3rem;}
+/* Medium prediction result card */
+.result-card {
+    width: 100%;
+    box-sizing: border-box;
+    border-radius: 22px;
+    padding: 1.8rem 2.2rem;
+    margin: 1rem 0;
+    min-height: 180px;
+    border: 1px solid var(--line);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    box-shadow: 0 8px 28px rgba(76,31,57,.045);
+}
+.result-card.positive { background: #F0F4F0; }
+.result-card.negative { background: #F8EEEE; }
+.result-card.neutral { background: #F1EFF5; }
+.result-card .result-label {
+    font-size: .82rem;
+    text-transform: uppercase;
+    letter-spacing: .17em;
+    font-weight: 700;
+    color: var(--plum);
+    margin-bottom: .4rem;
+}
+.result-card .result-sub {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.65rem;
+    line-height: 1;
+    font-weight: 600;
+    color: var(--plum);
+}
+.result-card.neutral .result-sub { font-size: 2.0rem; white-space: nowrap; letter-spacing: -.025em; }
 
-    .pill {
-        display: inline-block;
-        padding: .25rem .7rem;
-        border-radius: 999px;
-        border: 1px solid rgba(128,128,128,.25);
-        font-size: .85rem;
-        margin-right: .35rem;
-    }
-
-    .footer {
-        text-align: center;
-        opacity: .65;
-        padding: 1.5rem 0 .5rem;
-        font-size: .85rem;
-    }
-    </style>
-    """,
-    unsafe_allow_html=True,
-)
+.stButton > button { border-radius:999px; border:1px solid var(--plum); background:var(--plum); color:white; padding:.65rem 1.2rem; font-weight:600; }
+.stButton > button:hover { background:var(--violet-dark); border-color:var(--violet-dark); }
+.stTabs [data-baseweb="tab-list"] { gap:2rem; border-bottom:1px solid var(--line); }
+.stTabs [data-baseweb="tab"] { color:var(--muted); font-weight:600; padding-left:0; padding-right:0; }
+.stTabs [aria-selected="true"] { color:var(--plum) !important; }
+[data-testid="stMetric"] { background:var(--white); border:1px solid var(--line); border-radius:18px; padding:1rem; }
+div[data-testid="stDataFrame"] { border:1px solid var(--line); border-radius:18px; overflow:hidden; }
+hr { border-color:var(--line); }
+.small-muted { color:var(--muted); font-size:.86rem; line-height:1.6; }
+.footer { text-align:center; color:#938B95; font-size:.75rem; padding:3rem 0 1rem; }
+@media (max-width:900px) {
+    .block-container { padding:1.2rem 1rem 3rem; }
+    .hero { padding:2rem 1.4rem; border-radius:22px; }
+    .hero-title { font-size:3rem; }
+}
+</style>
+""", unsafe_allow_html=True)
 
 
 # ============================================================
@@ -192,6 +241,39 @@ except Exception as exc:
 
 dataset, distribution = load_dataset_info()
 
+@st.cache_data
+def build_eda_data(df):
+    if df is None:
+        return {}
+    out = {
+        "rows": len(df),
+        "columns": len(df.columns),
+        "duplicates": int(df.duplicated().sum()),
+    }
+
+    text_cols = [c for c in df.columns if "review" in c.lower() or "text" in c.lower()]
+    out["text_col"] = text_cols[0] if text_cols else None
+    if out["text_col"]:
+        lengths = df[out["text_col"]].fillna("").astype(str).str.split().str.len()
+        lengths = lengths[lengths > 0]
+        out["lengths"] = lengths
+
+    if "sentiment" in df.columns:
+        out["sentiment"] = df["sentiment"].value_counts().reindex(
+            ["Negative", "Neutral", "Positive"], fill_value=0
+        )
+
+    rating_cols = [c for c in df.columns if c.lower() in {"rating", "ratings", "score", "stars"}]
+    out["rating_col"] = rating_cols[0] if rating_cols else None
+    if out["rating_col"]:
+        r = pd.to_numeric(df[out["rating_col"]], errors="coerce").dropna()
+        out["ratings"] = r.value_counts().sort_index()
+
+    out["missing"] = df.isna().sum()
+    return out
+
+eda = build_eda_data(dataset)
+
 
 # ============================================================
 # Session state
@@ -204,8 +286,8 @@ if "history" not in st.session_state:
 # Sidebar
 # ============================================================
 with st.sidebar:
-    st.markdown("## 💬 ReviewSense")
-    st.caption("Customer Review Sentiment Analysis")
+    st.markdown("## Sentiment Analysis")
+    st.caption("Sentiment Analysis")
     st.divider()
 
     st.markdown("### 🔮 Prediction model")
@@ -238,7 +320,7 @@ with st.sidebar:
 st.markdown(
     """
     <div class="hero">
-        <h1>💬 Customer Review Sentiment Analysis</h1>
+        <h1>Sentiment Analysis</h1>
         <p>Analyze customer feedback using NLP, TF-IDF feature extraction and five machine-learning classifiers.</p>
     </div>
     """,
@@ -262,9 +344,7 @@ st.divider()
 # ============================================================
 # Main tabs
 # ============================================================
-tab_analyze, tab_compare, tab_explore, tab_method, tab_about = st.tabs(
-    ["🔮 Analyze Review", "📊 Model Lab", "📜 History & Data", "🔬 Methodology", "ℹ️ About"]
-)
+tab_analyze, tab_compare, tab_eda, tab_explore, tab_method, tab_about = st.tabs(['🔮 Analyze Review', '📊 Model Lab', '📈 EDA Dashboard', '📜 History & Data', '🔬 Methodology', 'ℹ️ About'])
 
 
 # ============================================================
@@ -330,7 +410,7 @@ with tab_analyze:
                     elif sentiment == "Negative":
                         emoji, css, message = "😞", "negative", "Negative customer feedback"
                     else:
-                        emoji, css, message = "😐", "neutral", "Neutral or mixed customer feedback"
+                        emoji, css, message = "😐", "neutral", "Neutral customer feedback"
 
                     st.markdown(
                         f"""
@@ -341,13 +421,35 @@ with tab_analyze:
                         """,
                         unsafe_allow_html=True,
                     )
-
-                    info1, info2 = st.columns(2)
-                    info1.metric("Model Used", selected_model)
+                    info1, info2 = st.columns(2, gap="medium")
                     if selected_model == "SVM":
-                        info2.metric("Decision Score", f"{decision_score:.4f}")
+                        second_label = "Decision Score"
+                        second_value = f"{decision_score:.4f}"
                     else:
-                        info2.metric("Model Confidence", f"{confidence * 100:.1f}%")
+                        second_label = "Model Confidence"
+                        second_value = f"{confidence * 100:.1f}%"
+
+                    with info1:
+                        st.markdown(
+                            f"""
+                            <div class="model-info-card">
+                                <div class="model-info-label">Model Used</div>
+                                <div class="model-info-value">{selected_model}</div>
+                            </div>
+                            """,
+                            unsafe_allow_html=True,
+                        )
+                    with info2:
+                        st.markdown(
+                            f"""
+                            <div class="model-info-card">
+                                <div class="model-info-label">{second_label}</div>
+                                <div class="model-info-value">{second_value}</div>
+                            </div>
+                            """,
+                            unsafe_allow_html=True,
+                        )
+
 
                     st.session_state.history.insert(
                         0,
@@ -390,6 +492,114 @@ with tab_analyze:
         st.info(
             "Tip: Change the model in the sidebar and analyze the same review to compare how the five classifiers behave."
         )
+
+
+
+# ============================================================
+# EDA Dashboard
+# ============================================================
+with tab_eda:
+    st.subheader("📈 EDA Dashboard")
+    st.caption("Power BI-style overview of the cleaned customer-review dataset.")
+
+    if dataset is None:
+        st.warning("EDA is unavailable because cleaned_sentiment_reviews.csv was not found.")
+    else:
+        # KPI cards
+        c1, c2 = st.columns(2)
+        c1.metric("Total Reviews", f"{eda['rows']:,}")
+        c2.metric("Features", f"{eda['columns']:,}")
+
+        st.divider()
+
+
+        # Main visual dashboard
+        left, right = st.columns(2, gap="large")
+
+        with left:
+            st.markdown("### 🎯 Sentiment Distribution")
+            if "sentiment" in eda:
+                sent = eda["sentiment"]
+                st.bar_chart(sent, height=300)
+                pct = (sent / sent.sum() * 100).round(2)
+                st.dataframe(
+                    pd.DataFrame({"Reviews": sent, "Percentage": pct}),
+                    use_container_width=True,
+                    hide_index=True,
+                )
+            else:
+                st.info("No sentiment column found.")
+
+        with right:
+            st.markdown("### 📋 Dataset Information")
+            st.markdown(
+                f"""
+                <div class="card" style="padding:1.25rem 1.4rem; min-height:300px;">
+                    <div style="font-size:.92rem; line-height:2;">
+                        <b>Rows:</b> {len(dataset):,}<br>
+                        <b>Columns:</b> {len(dataset.columns):,}<br>
+                        <b>Review column:</b> {eda.get('text_col') or 'Not detected'}<br>
+                        <b>Sentiment column:</b> {'sentiment' if 'sentiment' in dataset.columns else 'Not detected'}<br>
+                        <b>Rating column:</b> {eda.get('rating_col') or 'Not detected'}<br>
+                        <b>Duplicates:</b> {eda['duplicates']:,}
+                    </div>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+
+        if eda.get("rating_col"):
+            st.divider()
+            st.markdown(f"### ⭐ Rating Distribution — {eda['rating_col']}")
+            st.bar_chart(eda["ratings"])
+
+        st.divider()
+
+
+
+
+        with st.expander("🔎 View sample data"):
+            # Keep the preview compact and readable.
+            preferred_columns = [
+                col for col in ["review", "sentiment", "rating"]
+                if col in dataset.columns
+            ]
+
+            if preferred_columns:
+                sample_data = dataset[preferred_columns].head(10).copy()
+
+                column_config = {}
+                if "review" in sample_data.columns:
+                    column_config["review"] = st.column_config.TextColumn(
+                        "Review",
+                        width="large",
+                        help="Original customer review",
+                    )
+                if "sentiment" in sample_data.columns:
+                    column_config["sentiment"] = st.column_config.TextColumn(
+                        "Sentiment",
+                        width="medium",
+                    )
+                if "rating" in sample_data.columns:
+                    column_config["rating"] = st.column_config.NumberColumn(
+                        "Rating",
+                        width="small",
+                    )
+
+                st.dataframe(
+                    sample_data,
+                    width="stretch",
+                    height=360,
+                    hide_index=True,
+                    column_config=column_config,
+                )
+            else:
+                st.dataframe(
+                    dataset.head(10),
+                    width="stretch",
+                    height=360,
+                    hide_index=True,
+                )
 
 
 # ============================================================
@@ -534,7 +744,7 @@ with tab_method:
 with tab_about:
     st.subheader("ℹ️ About this project")
     st.write(
-        "Customer Review Sentiment Analysis is an NLP and machine-learning project designed to "
+        "Sentiment Analysis is an NLP and machine-learning project designed to "
         "automatically classify customer feedback into Positive, Neutral and Negative sentiment. "
         "The application provides both model comparison and interactive prediction."
     )
@@ -556,6 +766,6 @@ with tab_about:
 
 
 st.markdown(
-    '<div class="footer">Customer Review Sentiment Analysis · Data Science Major Project</div>',
+    '<div class="footer">Sentiment Analysis · Data Science Major Project</div>',
     unsafe_allow_html=True,
 )
