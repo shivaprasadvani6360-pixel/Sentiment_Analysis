@@ -134,6 +134,20 @@ div[data-testid="stDataFrame"] { border:1px solid var(--line); border-radius:18p
 hr { border-color:var(--line); }
 .small-muted { color:var(--muted); font-size:.86rem; line-height:1.6; }
 .footer { text-align:center; color:#938B95; font-size:.75rem; padding:3rem 0 1rem; }
+
+/* Keep Streamlit's native text readable in both Light and Dark mode.
+   The existing custom cards/design remain unchanged. */
+.stApp [data-testid="stMarkdownContainer"],
+.stApp [data-testid="stCaptionContainer"],
+.stApp label,
+.stApp [data-testid="stText"] {
+    color: var(--st-text-color, var(--ink));
+}
+.stApp input,
+.stApp textarea,
+.stApp [data-baseweb="select"] * {
+    color: var(--st-text-color, var(--ink));
+}
 @media (max-width:900px) {
     .block-container { padding:1.2rem 1rem 3rem; }
     .hero { padding:2rem 1.4rem; border-radius:22px; }
